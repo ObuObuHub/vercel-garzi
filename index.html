@@ -1,19 +1,24 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planificare Ture Medicale</title>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Planificare Ture Medicale</title>
+
+  <!-- Tailwind—CDN build is fine for small apps -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@^3/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body>
-    <div id="root"></div>
-    <script type="text/babel" src="./App.js"></script>
-    <script type="text/babel">
-        ReactDOM.createRoot(document.getElementById('root')).render(<HospitalShiftScheduler />);
-    </script>
+<body class="bg-gray-50">
+  <div id="root"></div>
+
+  <!-- One ES-module block that bootstraps the app -->
+  <script type="module">
+    import React from 'https://esm.sh/react@18';
+    import { createRoot } from 'https://esm.sh/react-dom@18/client';
+    import HospitalShiftScheduler from './App.js';   // same directory
+
+    createRoot(document.getElementById('root'))
+      .render(<HospitalShiftScheduler />);
+  </script>
 </body>
 </html>
