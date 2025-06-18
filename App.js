@@ -73,7 +73,6 @@ const HospitalShiftScheduler = () => {
       const dateKey = date.toISOString().split('T')[0];
       newShifts[dateKey] = [];
       
-      // Randomly generate shifts for demo purposes
       if (Math.random() > 0.3) {
         newShifts[dateKey].push({
           id: `${dateKey}-zi`, type: shiftTypes.ZI, staffIds: [1, 3], 
@@ -196,9 +195,11 @@ const HospitalShiftScheduler = () => {
     const days = useMemo(() => {
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
+        // Adjust for Sunday start of week
         const firstDayOfMonth = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         const daysArray = [];
+        
         const prevMonthLastDay = new Date(year, month, 0).getDate();
 
         for (let i = firstDayOfMonth; i > 0; i--) {
@@ -219,7 +220,7 @@ const HospitalShiftScheduler = () => {
 
     return (
       <div className="bg-white rounded-xl shadow-lg p-6">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-wrap items-center justify-between mb-6 gap-4">
           <h2 className="text-2xl font-bold text-gray-800">{months[currentDate.getMonth()]} {currentDate.getFullYear()}</h2>
           <div className="flex items-center space-x-2">
             <button onClick={() => setCurrentDate(d => new Date(d.setMonth(d.getMonth() - 1)))} className="p-2 hover:bg-gray-100 rounded-lg transition-colors"><ChevronLeft className="w-5 h-5" /></button>
@@ -239,7 +240,7 @@ const HospitalShiftScheduler = () => {
               <div key={index} className={`min-h-[120px] p-2 border rounded-lg cursor-pointer transition-all ${!isCurrentMonth ? 'bg-gray-50 opacity-50' : 'bg-white hover:shadow-md'} ${isToday ? 'ring-2 ring-blue-400' : 'border-gray-200'}`} onClick={() => setSelectedShift({ date, shifts: dayShifts })}>
                 <div className={`font-semibold text-sm mb-1 ${!isCurrentMonth && 'text-gray-400'}`}>{date.getDate()}</div>
                 <div className="space-y-1">
-                  {dayShifts.slice(0, 2).map(shift => {
+                  {dayShifts.slice(0, 3).map(shift => {
                     const { isValid } = checkMinimumStaff(shift);
                     return (
                       <div key={shift.id} className="text-xs p-1 rounded flex items-center justify-between" style={{ backgroundColor: shift.type.color + '20', borderLeft: `3px solid ${shift.type.color}` }}>
@@ -248,7 +249,7 @@ const HospitalShiftScheduler = () => {
                       </div>
                     );
                   })}
-                  {dayShifts.length > 2 && <div className="text-xs text-gray-500 text-center">+{dayShifts.length - 2} altele</div>}
+                  {dayShifts.length > 3 && <div className="text-xs text-gray-500 text-center">+{dayShifts.length - 3} altele</div>}
                 </div>
               </div>
             );
@@ -269,12 +270,11 @@ const HospitalShiftScheduler = () => {
         </div>
       );
     }
-
     return (
       <div className="space-y-6">
         <div className="bg-white rounded-xl shadow-lg p-6">
           <h3 className="text-xl font-bold text-gray-800">Panou de Administrare</h3>
-          {/* More admin features can be added here */}
+          <p className="mt-2 text-gray-600">Aici puteți gestiona personalul, spitalele și tipurile de ture.</p>
         </div>
       </div>
     );
@@ -310,6 +310,36 @@ const HospitalShiftScheduler = () => {
     </div>
   );
 
+  const ShiftDetailsModal = () => {
+    if (!selectedShift) return null;
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => setSelectedShift(null)}>
+            <div className="bg-white rounded-xl max-w-lg w-full p-6" onClick={(e) => e.stopPropagation()}>
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xl font-bold">Ture pentru {selectedShift.date.toLocaleDateString('ro-RO')}</h3>
+                    <button onClick={() => setSelectedShift(null)} className="p-2 hover:bg-gray-100 rounded-full"><X className="w-5 h-5" /></button>
+                </div>
+                <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+                    {selectedShift.shifts.length > 0 ? selectedShift.shifts.map(shift => (
+                        <div key={shift.id} className="border rounded-lg p-4">
+                            <h4 className="font-semibold" style={{color: shift.type.color}}>{shift.type.name}</h4>
+                            <p className="text-sm text-gray-600">{shift.type.start} - {shift.type.end}</p>
+                             <div className="mt-2">
+                                <h5 className="font-medium text-sm">Personal Asignat:</h5>
+                                <ul className="list-disc list-inside text-sm text-gray-700">
+                                    {staff.filter(s => shift.staffIds.includes(s.id)).map(person => (
+                                        <li key={person.id}>{person.name} ({person.specialization})</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+                    )) : <p className="text-gray-500">Nu sunt ture programate pentru această zi.</p>}
+                </div>
+            </div>
+        </div>
+    );
+  };
+
 
   // --- MAIN RENDER ---
   return (
@@ -321,9 +351,9 @@ const HospitalShiftScheduler = () => {
               <button onClick={() => setShowMobileMenu(!showMobileMenu)} className="lg:hidden p-2 rounded-md hover:bg-gray-100"><Menu className="w-6 h-6" /></button>
               <h1 className="ml-2 text-xl font-bold text-gray-800">Planificator Ture</h1>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="hidden lg:flex items-center space-x-4">
               <RoleSwitcher />
-              <div className="hidden md:flex items-center">
+              <div className="flex items-center">
                 <Building2 className="w-5 h-5 mr-2 text-gray-400" />
                 <select value={selectedHospital} onChange={(e) => setSelectedHospital(e.target.value)} className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                   {hospitals.map(hospital => <option key={hospital.id} value={hospital.id}>{hospital.name}</option>)}
@@ -374,7 +404,7 @@ const HospitalShiftScheduler = () => {
         {currentView === 'admin' && <AdminPanel />}
       </main>
       
-      {/* Modals will be rendered here if they are re-added */}
+      <ShiftDetailsModal />
     </div>
   );
 };
